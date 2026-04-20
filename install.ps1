@@ -114,7 +114,7 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     Write-Host "  Downloading from HuggingFace: $ModelRepo/$ModelFile" -ForegroundColor Gray
     try {
         # Using huggingface-cli for download
-        $cmd = if ($hasHfCli) { "huggingface-cli" } else { "hf" }
+        if ($hasHfCli) { $cmd = "huggingface-cli" } else { $cmd = "hf" }
         & $cmd download $ModelRepo $ModelFile --local-dir $modelPath
         if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $modelPath $ModelFile))) {
             Write-Success "Model downloaded successfully"
