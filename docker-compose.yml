@@ -7,7 +7,7 @@ services:
   llamacpp:
     container_name: glitch-clt-server
     build:
-      context: ./llama.cpp-turboquant
+      context: .
       dockerfile: .devops/cuda.Dockerfile
       target: full
       args:
