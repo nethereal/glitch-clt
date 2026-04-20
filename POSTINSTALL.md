@@ -1,5 +1,8 @@
 # Post-Installation Guide: Setting Up Your Local Model
 
+> [!TIP]
+> Press **Ctrl + Shift + V** to open this guide in Preview Mode for a better reading experience.
+
 Congratulations! **glitch-CLT** is now installed. To start using your local model in VS Code Insiders, follow these simple configuration steps.
 
 ### 1. Open the Model Selection Menu
