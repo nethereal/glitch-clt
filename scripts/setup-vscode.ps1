@@ -29,8 +29,8 @@
 [CmdletBinding()]
 param(
     [int]$Port = 9998,
-    [string]$Host = "localhost",
-    [string]$ModelName = "Qwen 3.6 35B A3B Turbo",
+    [string]$tgtHost = "localhost",
+    [string]$ModelName = "Qwen 3.6 35B A3B (Local)",
     [int]$ContextLength = 262144,
     [int]$MaxOutputTokens = 8192,
     [switch]$UseNativeProvider
@@ -41,10 +41,10 @@ $ErrorActionPreference = "Stop"
 
 # --- Configuration ---
 $ScriptVersion = "1.0.0"
-$EntryName = "llamacpp-turboquant"
+$EntryName = "Glitch-CLT-Qwen3.6-35B"
 $VendorCustomOAI = "customoai"
 $VendorNative = "llamacpp"
-$ModelId = "qwen3.6-35b-a3b-iq4xs"
+$ModelId = "qwen3.6-35b-local"
 
 # --- Helper Functions ---
 function Get-VSCodeInsidersUserDataPath {
@@ -70,15 +70,11 @@ $configFile = Join-Path $userDataPath "chatLanguageModels.json"
 
 Write-Host "[1/5] Configuration file: $configFile" -ForegroundColor Yellow
 
-# Check if VS Code Insiders is running
+# Check if VS Code Insiders is running (non-blocking)
 $vscodeProcesses = Get-Process -Name "Code - Insiders" -ErrorAction SilentlyContinue
+$vscodeWasRunning = $false
 if ($vscodeProcesses) {
-    Write-Warning "VS Code Insiders appears to be running. Changes may not take effect until restart."
-    $continue = Read-Host "Continue anyway? (y/N)"
-    if ($continue -ne 'y' -and $continue -ne 'Y') {
-        Write-Host "Aborted." -ForegroundColor Red
-        exit 0
-    }
+    $vscodeWasRunning = $true
 }
 
 # Create the file if it doesn't exist
@@ -98,37 +94,42 @@ try {
     exit 1
 }
 
-# Build the new model entry
-$stopSequences = @("```", "</s>", "``")
-$modelEntry = @{
-    id              = $ModelId
-    name            = $ModelName
-    url             = "http://${Host}:${Port}/v1"
-    api_key         = "not-needed"
-    toolCalling     = $true
-    vision          = $false
-    maxInputTokens  = $ContextLength
-    maxOutputTokens = $MaxOutputTokens
-    completionOptions = @{
-        stop = $stopSequences
+$customentry = @"
+{
+"name": "###NAME###",
+"vendor": "customoai",
+"models": [
+    {
+    "id": "qwen3.6-35b-local",
+    "name": "Qwen 3.6 35B A3B (Local)",
+    "url": "http://###tgtHost###:###Port###/v1",
+    "api_key": "not-needed",
+    "toolCalling": true,
+    "vision": false,
+    "maxInputTokens": 262144,
+    "maxOutputTokens": 8192,
+    "completionOptions": {
+        "stop": [
+        "<|im_end|>",
+        "<|im_start|>",
+        "<|endoftext|>"
+        ]
     }
+    }
+]
 }
+"@
 
-# Determine vendor type
-if ($UseNativeProvider) {
-    $vendorType = $VendorNative
-    Write-Host "[3/5] Using native 'llamacpp' vendor (requires newer Insiders build)" -ForegroundColor Yellow
-} else {
-    $vendorType = $VendorCustomOAI
-    Write-Host "[3/5] Using 'customoai' vendor" -ForegroundColor Yellow
-}
 
-# Build the new entry object
-$newEntry = @{
-    name   = $EntryName
-    vendor = $vendorType
-    models = @($modelEntry)
-}
+
+# --- New approach: use $customentry as template ---
+# Replace placeholders in $customentry
+$customentryJson = $customentry.Replace('###NAME###', $EntryName)
+$customentryJson = $customentryJson.Replace('###tgtHost###', $tgtHost)
+$customentryJson = $customentryJson.Replace('###Port###', $Port.ToString())
+
+# Convert to PowerShell object
+$newEntry = $customentryJson | ConvertFrom-Json
 
 # Check if entry already exists and update or create
 $existingIndex = $null
@@ -143,6 +144,7 @@ if ($existingIndex -ne $null) {
     # Update existing entry in place
     $existingConfig[$existingIndex] = $newEntry
     Write-Host "[4/5] Updated existing entry '$EntryName'" -ForegroundColor Green
+    $configToWrite = $existingConfig
 } else {
     # Insert new entry after "Copilot" or at the beginning
     $copilotIndex = $null
@@ -180,18 +182,23 @@ Write-Host "[5/5] Writing configuration..." -ForegroundColor Yellow
 $jsonOutput = $configToWrite | ConvertTo-Json -Depth 10
 $jsonOutput | Out-File -FilePath $configFile -Encoding UTF8
 
+
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host "  Configuration complete!" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Model:      $ModelName ($ModelId)" -ForegroundColor White
-Write-Host "URL:        http://${Host}:${Port}/v1" -ForegroundColor White
+Write-Host "URL:        http://${tgtHost}:${Port}/v1" -ForegroundColor White
 Write-Host "Context:    $ContextLength tokens" -ForegroundColor White
 Write-Host "Vendor:     $vendorType" -ForegroundColor White
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  1. Start the Docker container: docker compose up -d" -ForegroundColor Gray
-Write-Host "  2. Restart VS Code Insiders (if already open)" -ForegroundColor Gray
-Write-Host "  3. Open Copilot Chat and select '$EntryName' from the model picker" -ForegroundColor Gray
+Write-Host ("  1. Start the Docker container: docker compose up -d") -ForegroundColor Gray
+Write-Host ("  2. Restart VS Code Insiders (if already open)") -ForegroundColor Gray
+Write-Host ("  3. Open Copilot Chat and select '" + $EntryName + "' from the model picker") -ForegroundColor Gray
+Write-Host ""
+if ($vscodeWasRunning) {
+    Write-Warning "VS Code Insiders was detected running during configuration. You may need to restart VS Code Insiders for changes to take effect."
+}
 Write-Host ""
