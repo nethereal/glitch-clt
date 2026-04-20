@@ -3,6 +3,7 @@ models/*.gguf
 !models/.gitkeep
 
 # Environment overrides
+.env
 .env.local
 .env.override
 
