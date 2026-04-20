@@ -112,16 +112,28 @@ After setup completes, open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat"), se
 
 ---
 
-### Prerequisites
+---
 
-Before running the quickstart or `install.ps1`, ensure you have these four items installed:
+## Prerequisites
 
-| # | Requirement | Notes |
-|---|-------------|-------|
-| 1 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | With NVIDIA Container Toolkit enabled |
-| 2 | [Git](https://git-scm.com/downloads) | For cloning and submodule management |
-| 3 | `huggingface_hub` | Install via `pip install huggingface_hub` |
-| 4 | VS Code Insiders | Must include Copilot Chat support |
+Before starting the automated installation, ensure you have the following core tools installed. These are required to clone the repository, download the multi-gigabyte models, and host the inference container.
+
+### 1. Essential Tools
+| Tool | Purpose | Download Link |
+| :--- | :--- | :--- |
+| **VS Code Insiders** | Primary development environment with early access to custom Copilot Chat models. | [Download Insiders](https://code.visualstudio.com/insiders/) |
+| **Git for Windows** | Required for repository cloning and submodule management. | [Install Git](https://git-scm.com/install/windows) |
+| **Docker Desktop** | Hosts the local `llama.cpp` inference engine. | [Download Docker](https://www.docker.com/products/docker-desktop/) |
+
+### 2. Hugging Face CLI (`hf`)
+We use the Hugging Face CLI to handle high-speed, resumable downloads of the 18GB quantized models. Run the following command in an administrative PowerShell window to install:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://hf.co/cli/install.ps1 | iex"
+```
+
+> [!TIP]
+> After installing the HF CLI, restart your terminal to ensure the `hf` command is recognized in your system path.
 
 ---
 
