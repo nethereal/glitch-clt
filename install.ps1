@@ -22,7 +22,7 @@ $ScriptVersion = "1.0.0"
 
 # --- Helpers ---
 function Write-Step { param([string]$Num, [string]$Text) Write-Host "`n[$Num] $Text" -ForegroundColor Cyan }
-function Write-Success { param([string]$Text) Write-Host "  ✓ $Text" -ForegroundColor Green }
+function Write-Success { param([string]$Text) Write-Host "  [OK] $Text" -ForegroundColor Green }
 function Write-Warn { param([string]$Text) Write-Warning $Text }
 function Test-CommandExists { param([string]$Name); return $null -ne (Get-Command $Name -ErrorAction SilentlyContinue) }
 
@@ -32,36 +32,36 @@ Write-Step "0/4" "Checking prerequisites..."
 $allOk = $true
 Write-Host ""
 if (Test-CommandExists docker) {
-    Write-Host "  ✓ Docker Desktop (docker)" -ForegroundColor Green
+    Write-Host "  [OK] Docker Desktop (docker)" -ForegroundColor Green
 } else {
-    Write-Host "  ✗ Docker Desktop (docker)" -ForegroundColor Red
+    Write-Host "  [FAIL] Docker Desktop (docker)" -ForegroundColor Red
     $allOk = $false
 }
 if (Test-CommandExists git) {
-    Write-Host "  ✓ Git" -ForegroundColor Green
+    Write-Host "  [OK] Git" -ForegroundColor Green
 } else {
-    Write-Host "  ✗ Git" -ForegroundColor Red
+    Write-Host "  [FAIL] Git" -ForegroundColor Red
     $allOk = $false
 }
-$hasHf = Test-CommandExists hf
-$hasHfCli = Test-CommandExists huggingface-cli
-if ($hasHf -or $hasHfCli) {
-    Write-Host "  ✓ Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Green
+$statusHasHf = Test-CommandExists hf
+$statusHasHfCli = Test-CommandExists huggingface-cli
+if ($statusHasHf -or $statusHasHfCli) {
+    Write-Host "  [OK] Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Green
 } else {
-    Write-Host "  ? Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Yellow
+    Write-Host "  [-] Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Yellow
     Write-Host "    Attempting to install huggingface_hub via pip..." -ForegroundColor Gray
     try {
         pip install huggingface_hub --quiet
-        Write-Host "  ✓ Hugging Face CLI (Successfully installed)" -ForegroundColor Green
+        Write-Host "  [OK] Hugging Face CLI (Successfully installed)" -ForegroundColor Green
     } catch {
-        Write-Host "  ✗ Hugging Face CLI (Failed to install)" -ForegroundColor Red
+        Write-Host "  [FAIL] Hugging Face CLI (Failed to install)" -ForegroundColor Red
         $allOk = $false
     }
 }
 if (Test-CommandExists code-insiders) {
-    Write-Host "  ✓ VS Code Insiders (code-insiders)" -ForegroundColor Green
+    Write-Host "  [OK] VS Code Insiders (code-insiders)" -ForegroundColor Green
 } else {
-    Write-Host "  ✗ VS Code Insiders (code-insiders)" -ForegroundColor Red
+    Write-Host "  [FAIL] VS Code Insiders (code-insiders)" -ForegroundColor Red
     $allOk = $false
 }
 
@@ -114,8 +114,8 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     Write-Host "  Downloading from HuggingFace: $ModelRepo/$ModelFile" -ForegroundColor Gray
     try {
         # Using huggingface-cli for download
-        if ($hasHfCli) { $cmd = "huggingface-cli" } else { $cmd = "hf" }
-        & $cmd download $ModelRepo $ModelFile --local-dir $modelPath
+        if ($statusHasHfCli) { $hfCmd = "huggingface-cli" } else { $hfCmd = "hf" }
+        & $hfCmd download $ModelRepo $ModelFile --local-dir $modelPath
         if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $modelPath $ModelFile))) {
             Write-Success "Model downloaded successfully"
         } else {

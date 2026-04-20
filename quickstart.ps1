@@ -18,11 +18,11 @@ $RepoUrl = "https://github.com/nethereal/glitch-clt.git"
 $RepoName = "glitch-clt"
 
 function Write-Step { param([string]$Num, [string]$Text) Write-Host "`n[$Num] $Text" -ForegroundColor Cyan }
-function Write-Success { param([string]$Text) Write-Host "  ✓ $Text" -ForegroundColor Green }
+function Write-Success { param([string]$Text) Write-Host "  [OK] $Text" -ForegroundColor Green }
 
-Write-Host "`n╔════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║             glitch-CLT — Quickstart Bootstrapper       ║" -ForegroundColor Magenta
-Write-Host "╚════════════════════════════════════════════════════════╝`n" -ForegroundColor Magenta
+Write-Host "`n************************************************************" -ForegroundColor Magenta
+Write-Host "*             glitch-CLT — Quickstart Bootstrapper       *" -ForegroundColor Magenta
+Write-Host "************************************************************`n" -ForegroundColor Magenta
 
 # 1. Resolve Location
 $basePath = Resolve-Path $ClonePath
@@ -37,7 +37,6 @@ if ($currentDir -like "*$RepoName" -and (Test-Path "$currentDir\.git")) {
     Write-Success "Repository already exists at: $cloneDir"
 } else {
     Write-Step "1/2" "Cloning repository..."
-    # Using -ErrorAction Continue to handle progress output without crashing
     $oldPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     git clone --recurse-submodules $RepoUrl $cloneDir
