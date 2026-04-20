@@ -164,8 +164,11 @@ Write-Host "Context:     $ContextLength" -ForegroundColor White
 Write-Host ""
 Write-Host "Launching VS Code Insiders..." -ForegroundColor Yellow
 try {
-    Start-Process "code-insiders" -ArgumentList "." -ErrorAction Stop
+    # Open the repository and the post-installation guide
+    # We use a hidden PowerShell window to launch it to ensure no console flash
+    $codeCmd = "Start-Process 'code-insiders' -ArgumentList '.', 'POSTINSTALL.md'"
+    Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden", "-Command", "$codeCmd" -ErrorAction Stop
 } catch {
-    Write-Host "  Please open VS Code Insiders manually: code-insiders ." -ForegroundColor Gray
+    Write-Host "  Please open VS Code Insiders manually: code-insiders . POSTINSTALL.md" -ForegroundColor Gray
 }
 Write-Host ""
