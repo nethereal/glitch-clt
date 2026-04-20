@@ -33,13 +33,15 @@ $allOk = $true
 Write-Host ""
 if (Test-CommandExists docker) {
     Write-Host "  [OK] Docker Desktop (docker)" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  [FAIL] Docker Desktop (docker)" -ForegroundColor Red
     $allOk = $false
 }
 if (Test-CommandExists git) {
     Write-Host "  [OK] Git" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  [FAIL] Git" -ForegroundColor Red
     $allOk = $false
 }
@@ -47,20 +49,23 @@ $statusHasHf = Test-CommandExists hf
 $statusHasHfCli = Test-CommandExists huggingface-cli
 if ($statusHasHf -or $statusHasHfCli) {
     Write-Host "  [OK] Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  [-] Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Yellow
     Write-Host "    Attempting to install huggingface_hub via pip..." -ForegroundColor Gray
     try {
         pip install huggingface_hub --quiet
         Write-Host "  [OK] Hugging Face CLI (Successfully installed)" -ForegroundColor Green
-    } catch {
+    }
+    catch {
         Write-Host "  [FAIL] Hugging Face CLI (Failed to install)" -ForegroundColor Red
         $allOk = $false
     }
 }
 if (Test-CommandExists code-insiders) {
     Write-Host "  [OK] VS Code Insiders (code-insiders)" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  [FAIL] VS Code Insiders (code-insiders)" -ForegroundColor Red
     $allOk = $false
 }
@@ -68,7 +73,8 @@ if (Test-CommandExists code-insiders) {
 if (-not $allOk) {
     Write-Host "`nPlease install the missing prerequisites and re-run this script." -ForegroundColor Yellow
     exit 1
-} else {
+}
+else {
     Write-Success "All prerequisites satisfied."
 }
 
@@ -81,7 +87,8 @@ if (-not (Test-Path "llama.cpp-turboquant")) {
     Write-Host "  Submodule missing. Attempting to initialize..." -ForegroundColor Gray
     git submodule update --init --recursive 2>&1 | Out-Null
     Write-Success "Submodule initialized"
-} else {
+}
+else {
     Write-Success "Submodule present"
 }
 
@@ -90,7 +97,8 @@ if (-not (Test-Path ".env")) {
     if (Test-Path ".env.example") {
         Copy-Item ".env.example" ".env"
         Write-Success "Created .env from .env.example"
-    } else {
+    }
+    else {
         "MODEL_PATH=./models`nMODEL_FILE=$ModelFile`nLLAMACPP_PORT=$Port`nCONTEXT_SIZE=$ContextLength" | Out-File -FilePath ".env" -Encoding UTF8
         Write-Success "Created new .env file"
     }
@@ -109,7 +117,8 @@ Write-Step "2/4" "Downloading model (~18GB)..."
 $modelPath = Join-Path (Get-Location).Path "models"
 if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     Write-Success "Model file already exists: $ModelFile"
-} else {
+}
+else {
     if (-not (Test-Path $modelPath)) { New-Item -ItemType Directory -Path $modelPath | Out-Null }
     Write-Host "  Downloading from HuggingFace: $ModelRepo/$ModelFile" -ForegroundColor Gray
     try {
@@ -118,10 +127,12 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
         & $hfCmd download $ModelRepo $ModelFile --local-dir $modelPath
         if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $modelPath $ModelFile))) {
             Write-Success "Model downloaded successfully"
-        } else {
+        }
+        else {
             throw "Download failed with exit code $LASTEXITCODE"
         }
-    } catch {
+    }
+    catch {
         Write-Error "`nFailed to download model. You can also download manually from:"
         Write-Host "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/$($ModelFile)" -ForegroundColor Cyan
         Write-Host "Then place the file in: $modelPath" -ForegroundColor Gray
@@ -134,7 +145,8 @@ Write-Step "3/4" "Configuring VS Code Insiders..."
 try {
     & (Join-Path (Join-Path (Get-Location).Path 'scripts') 'setup-vscode.ps1') -Port $Port -ContextLength $ContextLength
     Write-Success "VS Code configuration complete"
-} catch {
+}
+catch {
     Write-Warn "VS Code setup encountered an issue: $_"
     Write-Host "  You can run it manually later: .\scripts\setup-vscode.ps1" -ForegroundColor Gray
 }
@@ -145,13 +157,55 @@ try {
     $dockerOutput = docker compose up -d 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Docker container started (building on first run)"
-    } else {
+    }
+    else {
         Write-Warn "Docker compose failed. Attempting to show output..."
         Write-Host $dockerOutput -ForegroundColor Red
         docker compose up -d
     }
-} catch {
+}
+catch {
     Write-Warn "Docker compose failed: $_"
+}
+
+# --- VS Code Launch ---
+Write-Host ""
+Write-Step "5/5" "Waiting for llama.cpp server to be ready..."
+Write-Host "  Model: $ModelFile (~18GB)" -ForegroundColor Gray
+Write-Host "  Port: $Port" -ForegroundColor Gray
+Write-Host "  (This may take 1-2 minutes depending on your disk/GPU speed)" -ForegroundColor Gray
+
+$maxRetries = 120 # 120 retries * 2s = 4 minutes timeout
+$retryCount = 0
+$ready = $false
+$healthUrl = "http://localhost:${Port}/v1/models"
+
+while (-not $ready -and $retryCount -lt $maxRetries) {
+    try {
+        $response = Invoke-RestMethod -Uri $healthUrl -ErrorAction SilentlyContinue
+        if ($null -ne $response -and $null -ne $response.models) {
+            $ready = $true
+        }
+    }
+    catch {
+        # Server not up yet or returning error
+    }
+    
+    if (-not $ready) {
+        $retryCount++
+        $percent = [math]::Round(($retryCount / $maxRetries) * 100)
+        Write-Host "." -NoNewline -ForegroundColor Gray
+        Start-Sleep -Seconds 2
+    }
+}
+
+if ($ready) {
+    Write-Host ""
+    Write-Success "llama.cpp is ready and model is loaded."
+}
+else {
+    Write-Host ""
+    Write-Warn "Wait timed out or server is not responding. Proceeding anyway..."
 }
 
 # --- Wrap-up ---
@@ -162,12 +216,32 @@ Write-Host ""
 Write-Host "Model URL:   http://localhost:${Port}/v1" -ForegroundColor White
 Write-Host "Context:     $ContextLength" -ForegroundColor White
 Write-Host ""
+
 Write-Host "Launching VS Code Insiders..." -ForegroundColor Yellow
 try {
-    # Open the repository and the post-installation guide
-    # We use a hidden PowerShell window to launch it to ensure no console flash
-    $codeCmd = "Start-Process 'code-insiders' -ArgumentList '.', 'POSTINSTALL.md'"
-    Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden", "-Command", "$codeCmd" -ErrorAction Stop
+    # Sequential silent launch ensures settings are loaded before opening the guide.
+    # We use absolute paths to prevent any resolution issues in the background.
+    $currentRoot = (Get-Location).Path
+    $guidePath = Join-Path $currentRoot "POSTINSTALL.md"
+
+    $si = New-Object System.Diagnostics.ProcessStartInfo
+    $si.FileName = "cmd.exe"
+    $si.CreateNoWindow = $true
+    $si.UseShellExecute = $false
+    $si.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+
+    # 1. Open the repository root (initializes associations and trust)
+    $si.Arguments = "/c code-insiders `"$currentRoot`""
+    [System.Diagnostics.Process]::Start($si) | Out-Null
+
+    # 2. Wait for workspace initialization (allows extension host to start)
+    Start-Sleep -Seconds 5
+
+    # 3. Open the guide file specifically (leveraging established associations)
+    $si.Arguments = "/c code-insiders --reuse-window `"$guidePath`""
+    [System.Diagnostics.Process]::Start($si) | Out-Null
+
+    Write-Success "VS Code Insiders opened (Preview mode association established)."
 } catch {
     Write-Host "  Please open VS Code Insiders manually: code-insiders . POSTINSTALL.md" -ForegroundColor Gray
 }

@@ -1,5 +1,7 @@
 {
     "workbench.editorAssociations": {
         "POSTINSTALL.md": "vscode.markdown.preview.editor"
-    }
+    },
+    "markdown.preview.autoOpen": true,
+    "workbench.editor.closeEmptyGroups": false
 }
