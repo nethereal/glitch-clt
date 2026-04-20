@@ -16,6 +16,7 @@ glitch-CLT (Copilot Local Turbo) is a production-ready deployment package that e
 - [What This Does](#what-this-does)
 - [Architecture](#architecture)
 - [Hardware Requirements](#hardware-requirements)
+- [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [Usage](#usage)
@@ -73,7 +74,34 @@ glitch-CLT bridges the gap between powerful open-weight language models and VS C
 | Storage | 100GB+ NVMe SSD |
 | CUDA | 12.8+ with latest drivers |
 
+> [!IMPORTANT]
+> **glitch-CLT is designed for GPUs with a minimum of 24GB VRAM (e.g., RTX 3090, RTX 4090).**
+> With default settings, the system utilizes approximately **22GB of VRAM** for the model weights and the initial TurboQuant KV cache. Attempting to run this on cards with less than 24GB will result in Out-of-Memory (OOM) errors during the indexing phase.
+
 > **Note:** The Qwen3.6-35B-A3B model in IQ4_XS quantization requires ~18GB VRAM at baseline. TurboQuant's `turbo4` KV cache compression adds another layer of efficiency, allowing context windows up to 262K tokens within the same VRAM budget.
+
+---
+
+## Prerequisites
+
+Before starting the automated installation, ensure you have the following core tools installed. These are required to clone the repository, download the multi-gigabyte models, and host the inference container.
+
+### 1. Essential Tools
+| Tool | Purpose | Download Link |
+| :--- | :--- | :--- |
+| **VS Code Insiders** | Primary development environment with early access to custom Copilot Chat models. | [Download Insiders](https://code.visualstudio.com/insiders/) |
+| **Git for Windows** | Required for repository cloning and submodule management. | [Install Git](https://git-scm.com/install/windows) |
+| **Docker Desktop** | Hosts the local `llama.cpp` inference engine. | [Download Docker](https://www.docker.com/products/docker-desktop/) |
+
+### 2. Hugging Face CLI (`hf`)
+We use the Hugging Face CLI to handle high-speed, resumable downloads of the 18GB quantized models. Run the following command in an administrative PowerShell window to install:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://hf.co/cli/install.ps1 | iex"
+```
+
+> [!TIP]
+> After installing the HF CLI, restart your terminal to ensure the `hf` command is recognized in your system path.
 
 ---
 
@@ -109,31 +137,6 @@ The quickstart script clones the repo (if needed), then hands off to `install.ps
 ```
 
 After setup completes, open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat"), select **"llamacpp-turboquant"** from the model picker, and start chatting!
-
----
-
----
-
-## Prerequisites
-
-Before starting the automated installation, ensure you have the following core tools installed. These are required to clone the repository, download the multi-gigabyte models, and host the inference container.
-
-### 1. Essential Tools
-| Tool | Purpose | Download Link |
-| :--- | :--- | :--- |
-| **VS Code Insiders** | Primary development environment with early access to custom Copilot Chat models. | [Download Insiders](https://code.visualstudio.com/insiders/) |
-| **Git for Windows** | Required for repository cloning and submodule management. | [Install Git](https://git-scm.com/install/windows) |
-| **Docker Desktop** | Hosts the local `llama.cpp` inference engine. | [Download Docker](https://www.docker.com/products/docker-desktop/) |
-
-### 2. Hugging Face CLI (`hf`)
-We use the Hugging Face CLI to handle high-speed, resumable downloads of the 18GB quantized models. Run the following command in an administrative PowerShell window to install:
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://hf.co/cli/install.ps1 | iex"
-```
-
-> [!TIP]
-> After installing the HF CLI, restart your terminal to ensure the `hf` command is recognized in your system path.
 
 ---
 
