@@ -34,6 +34,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
     # Server command with TurboQuant KV cache compression
+    entrypoint: ["/app/llama-server"]
     command:
       - -m
       - /models/${MODEL_FILE}
