@@ -101,14 +101,16 @@ git submodule update --init --recursive
 
 The model file is ~18GB. Download it from HuggingFace:
 
+**Model:** [unsloth/Qwen3.6-35B-A3B-GGUF](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?show_file_info=Qwen3.6-35B-A3B-UD-IQ4_XS.gguf)
+
 ```powershell
 # Option A: Using huggingface-cli (recommended)
 pip install huggingface_hub
-huggingface-cli download YOUR_MODEL_REPO Qwen3.6-35B-A3B-UD-IQ4_XS.gguf --local-dir models/
+huggingface-cli download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-IQ4_XS.gguf --local-dir models/
 
 # Option B: Manual download
-# Visit the model repository and download Qwen3.6-35B-A3B-UD-IQ4_XS.gguf
-# Place it in the ./models/ directory
+# Visit https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?show_file_info=Qwen3.6-35B-A3B-UD-IQ4_XS.gguf
+# and download Qwen3.6-35B-A3B-UD-IQ4_XS.gguf to the ./models/ directory
 ```
 
 ### Step 3: Configure VS Code
