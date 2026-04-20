@@ -132,7 +132,7 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
 # --- VS Code Setup ---
 Write-Step "3/4" "Configuring VS Code Insiders..."
 try {
-    & (Join-Path (Get-Location).Path 'scripts' 'setup-vscode.ps1') -Port $Port -ContextLength $ContextLength
+    & (Join-Path (Join-Path (Get-Location).Path 'scripts') 'setup-vscode.ps1') -Port $Port -ContextLength $ContextLength
     Write-Success "VS Code configuration complete"
 } catch {
     Write-Warn "VS Code setup encountered an issue: $_"
