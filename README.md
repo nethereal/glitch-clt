@@ -90,7 +90,7 @@ glitch-CLT bridges the gap between powerful open-weight language models and VS C
 
 ```powershell
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/glitch-clt.git
+git clone [https://github.com/YOUR_USERNAME/glitch-clt.git](https://github.com/nethereal/glitch-clt)
 cd glitch-clt
 
 # Initialize submodules (downloads llama.cpp-turboquant fork)
