@@ -29,6 +29,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$env:PYTHONIOENCODING = 'utf-8' # Fix for Windows Unicode character encoding
 
 # --- Constants ---
 $RepoUrl = "https://github.com/nethereal/glitch-clt.git"
@@ -66,8 +67,15 @@ $hasHfCli = Test-CommandExists huggingface-cli
 if ($hasHf -or $hasHfCli) {
     Write-Host "  ✓ Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Green
 } else {
-    Write-Host "  ✗ Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Red
-    $allOk = $false
+    Write-Host "  ? Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Yellow
+    Write-Host "    Attempting to install huggingface_hub via pip..." -ForegroundColor Gray
+    try {
+        pip install huggingface_hub --quiet
+        Write-Host "  ✓ Hugging Face CLI (Successfully installed)" -ForegroundColor Green
+    } catch {
+        Write-Host "  ✗ Hugging Face CLI (Failed to install)" -ForegroundColor Red
+        $allOk = $false
+    }
 }
 if (Test-CommandExists code-insiders) {
     Write-Host "  ✓ VS Code Insiders (code-insiders)" -ForegroundColor Green
@@ -129,6 +137,27 @@ if (-not (Test-Path "llama.cpp-turboquant")) {
 } else {
     Write-Success "Submodule already present"
 }
+
+# --- Environment Setup ---
+Write-Step "1c/5" "Configuring environment files..."
+if (-not (Test-Path ".env")) {
+    if (Test-Path ".env.example") {
+        Copy-Item ".env.example" ".env"
+        Write-Success "Created .env from .env.example"
+    } else {
+        # Create a basic .env if example is missing
+        "MODEL_PATH=./models`nMODEL_FILE=$ModelFile`nLLAMACPP_PORT=$Port`nCONTEXT_SIZE=$ContextLength" | Out-File -FilePath ".env" -Encoding UTF8
+        Write-Success "Created new .env file"
+    }
+}
+
+# Inject parameters into .env
+$envContent = Get-Content ".env" -Raw
+$envContent = $envContent -replace '(?m)^LLAMACPP_PORT=.*$', "LLAMACPP_PORT=$Port"
+$envContent = $envContent -replace '(?m)^CONTEXT_SIZE=.*$', "CONTEXT_SIZE=$ContextLength"
+$envContent = $envContent -replace '(?m)^MODEL_FILE=.*$', "MODEL_FILE=$ModelFile"
+$envContent | Out-File -FilePath ".env" -Encoding UTF8
+Write-Success "Configuration injected into .env (Port: $Port, Context: $ContextLength)"
 
 # Download model
 Write-Step "2/5" "Downloading model (~18GB)..."
