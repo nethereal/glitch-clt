@@ -1,0 +1,58 @@
+# Model files (large GGUF files)
+models/*.gguf
+!models/.gitkeep
+
+# Environment overrides
+.env.local
+.env.override
+
+# Build artifacts
+build/
+cmake-build-*
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+*.exe
+*.bin
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker volumes and temp files
+docker-data/
+tmp/
+temp/
+
+# Benchmark results (local runs only)
+benchmarks/local-*.txt
+benchmarks/results-*.json
+
+# Logs
+*.log
+logs/
+
+# Secrets
+*.key
+*.pem
+secrets/
+
+# Cache directories
+.cache/
+.ccls-cache/
+__pycache__/
+*.pyc
+
+# Git submodule build artifacts
+llama.cpp-turboquant/build/
+llama.cpp-turboquant/bin/
+llama.cpp-turboquant/lib/
