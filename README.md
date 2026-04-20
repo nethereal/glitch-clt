@@ -85,27 +85,27 @@ There are two ways to get started — **one-command setup** (recommended) or **m
 
 ### One-Command Setup (Recommended)
 
-If you have all prerequisites installed, you can deploy the entire environment with a single copy-paste command:
+If you have all prerequisites installed, you can deploy the entire environment with a single command:
 
 **One-Liner (PowerShell):**
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "iex (Invoke-RestMethod 'https://raw.githubusercontent.com/nethereal/glitch-clt/main/quickstart.ps1')"
 ```
 
-Alternatively, if you have already cloned the repository:
+If you have already cloned the repository manually, use the internal installer:
 ```powershell
-.\quickstart.ps1
+.\install.ps1
 ```
 
-It will clone the repo (if needed), download the ~18GB model, configure VS Code Insiders, start Docker, and launch the environment automatically.
+The quickstart script clones the repo (if needed), then hands off to `install.ps1` to download the ~18GB model, configure VS Code Insiders, start Docker, and launch the environment.
 
-**Options:**
+**Options (for `install.ps1`):**
 ```powershell
-# Custom port or clone path
-.\quickstart.ps1 -Port 8000 -ClonePath "C:\projects"
+# Custom port
+.\install.ps1 -Port 8000
 
 # Custom context length (default: 262144)
-.\quickstart.ps1 -ContextLength 65536
+.\install.ps1 -ContextLength 65536
 ```
 
 After setup completes, open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat"), select **"llamacpp-turboquant"** from the model picker, and start chatting!
@@ -114,7 +114,7 @@ After setup completes, open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat"), se
 
 ### Prerequisites
 
-Before running `quickstart.ps1` or any manual steps, ensure you have these four items installed:
+Before running the quickstart or `install.ps1`, ensure you have these four items installed:
 
 | # | Requirement | Notes |
 |---|-------------|-------|
@@ -127,7 +127,7 @@ Before running `quickstart.ps1` or any manual steps, ensure you have these four 
 
 ### Manual Setup (Step-by-Step)
 
-If you prefer to control each step individually, follow these instead of running `quickstart.ps1`.
+If you prefer to control each step individually, follow these instead of running the automated scripts.
 
 #### Step 1: Clone and Initialize
 
@@ -190,7 +190,7 @@ Copy `.env.example` to `.env` and customize:
 cp .env.example .env
 ```
 
-> **Note:** `quickstart.ps1` automatically creates and configures this file for you.
+> **Note:** The automated scripts (`quickstart.ps1` or `install.ps1`) create and configure this file for you.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
