@@ -79,52 +79,74 @@ glitch-CLT bridges the gap between powerful open-weight language models and VS C
 
 ## Quick Start
 
-### Prerequisites
+There are two ways to get started — **one-command setup** (recommended) or **manual step-by-step**.
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (with NVIDIA Container Toolkit)
-- [Git](https://git-scm.com/downloads)
-- PowerShell 5.1+ (Windows) or Bash (Linux/macOS)
-- VS Code Insiders build with Copilot Chat support
+---
 
-### Step 1: Clone and Initialize
+### One-Command Setup (Recommended)
+
+If you have all prerequisites installed, this single script does everything:
 
 ```powershell
-# Clone the repository
+.\quickstart.ps1
+```
+
+It will clone the repo, download the ~18GB model, configure VS Code Insiders, start Docker, wait for readiness, and launch VS Code automatically.
+
+**Options:**
+```powershell
+# Custom port or clone path
+.\quickstart.ps1 -Port 8000 -ClonePath "C:\projects"
+
+# Custom context length (default: 262144)
+.\quickstart.ps1 -ContextLength 65536
+```
+
+After setup completes, open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat"), select **"llamacpp-turboquant"** from the model picker, and start chatting!
+
+---
+
+### Prerequisites
+
+Before running `quickstart.ps1` or any manual steps, ensure you have these four items installed:
+
+| # | Requirement | Notes |
+|---|-------------|-------|
+| 1 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | With NVIDIA Container Toolkit enabled |
+| 2 | [Git](https://git-scm.com/downloads) | For cloning and submodule management |
+| 3 | `huggingface_hub` | Install via `pip install huggingface_hub` |
+| 4 | VS Code Insiders | Must include Copilot Chat support |
+
+---
+
+### Manual Setup (Step-by-Step)
+
+If you prefer to control each step individually, follow these instead of running `quickstart.ps1`.
+
+#### Step 1: Clone and Initialize
+
+```powershell
 git clone https://github.com/nethereal/glitch-clt.git
 cd glitch-clt
-
-# Initialize submodules (downloads llama.cpp-turboquant fork)
 git submodule update --init --recursive
 ```
 
-### Step 2: Download Model
-
-The model file is ~18GB. Download it from HuggingFace:
+#### Step 2: Download Model
 
 **Model:** [unsloth/Qwen3.6-35B-A3B-GGUF](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?show_file_info=Qwen3.6-35B-A3B-UD-IQ4_XS.gguf)
 
 ```powershell
-# Option A: Using huggingface-cli (recommended)
 pip install huggingface_hub
 huggingface-cli download unsloth/Qwen3.6-35B-A3B-GGUF Qwen3.6-35B-A3B-UD-IQ4_XS.gguf --local-dir models/
-
-# Option B: Manual download
-# Visit https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?show_file_info=Qwen3.6-35B-A3B-UD-IQ4_XS.gguf
-# and download Qwen3.6-35B-A3B-UD-IQ4_XS.gguf to the ./models/ directory
 ```
 
-### Step 3: Configure VS Code
-
-Run the setup script to add your local model to Copilot Chat:
+#### Step 3: Configure VS Code
 
 ```powershell
 .\scripts\setup-vscode.ps1
 ```
 
-This will:
-- Add a new `"llamacpp-turboquant"` entry to `chatLanguageModels.json`
-- Preserve all existing model configurations
-- Configure proper stop sequences for Qwen models
+This adds a `"llamacpp-turboquant"` entry to `chatLanguageModels.json` and preserves all existing configurations.
 
 **Options:**
 ```powershell
@@ -135,18 +157,15 @@ This will:
 .\scripts\setup-vscode.ps1 -UseNativeProvider
 ```
 
-### Step 4: Start the Server
+#### Step 4: Start the Server
 
 ```powershell
 docker compose up -d
 ```
 
-The server will:
-- Build from source (first run takes ~5-15 minutes depending on hardware)
-- Load the model into VRAM
-- Listen on `http://localhost:9998`
+The server will build from source on first run (~5–15 min), load the model into VRAM, and listen on `http://localhost:9998`.
 
-### Step 5: Connect and Chat
+#### Step 5: Connect and Chat
 
 1. Open VS Code Insiders
 2. Open Copilot Chat (`Ctrl+Shift+P` → "Copilot Chat: Start New Thread")
