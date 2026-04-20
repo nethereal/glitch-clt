@@ -166,7 +166,8 @@ while ($elapsed -lt $maxWait) {
         if ([string]::IsNullOrWhiteSpace($containerStatus)) {
             $containerStatus = docker ps -a --filter "name=glamacpp-qwen3-6-35b-a3b-iq4xs" --format "{{.Status}}" 2>$null
         }
-        Write-Host "  Waiting... ($(${if($elapsed -lt 60){'building'}else{'loading model'}}) — ${elapsed}s elapsed)" -ForegroundColor DarkGray
+        $statusText = if ($elapsed -lt 60) { 'building' } else { 'loading model' }
+        Write-Host "  Waiting... ($statusText — ${elapsed}s elapsed)" -ForegroundColor DarkGray
     }
 }
 
