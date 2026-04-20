@@ -43,12 +43,64 @@ function Write-Success { param([string]$Text) Write-Host "  ✓ $Text" -Foregrou
 function Write-Warn { param([string]$Text) Write-Warning $Text }
 function Test-CommandExists { param([string]$Name); return $null -ne (Get-Command $Name -ErrorAction SilentlyContinue) }
 
+# --- Prerequisite Check ---
+Write-Step "0/5" "Checking prerequisites..."
+
+# Visual prereq check
+$allOk = $true
+Write-Host ""
+if (Test-CommandExists docker) {
+    Write-Host "  ✓ Docker Desktop (docker)" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ Docker Desktop (docker)" -ForegroundColor Red
+    $allOk = $false
+}
+if (Test-CommandExists git) {
+    Write-Host "  ✓ Git" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ Git" -ForegroundColor Red
+    $allOk = $false
+}
+$hasHf = Test-CommandExists hf
+$hasHfCli = Test-CommandExists huggingface-cli
+if ($hasHf -or $hasHfCli) {
+    Write-Host "  ✓ Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ Hugging Face CLI (hf or huggingface-cli)" -ForegroundColor Red
+    $allOk = $false
+}
+if (Test-CommandExists code-insiders) {
+    Write-Host "  ✓ VS Code Insiders (code-insiders)" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ VS Code Insiders (code-insiders)" -ForegroundColor Red
+    $allOk = $false
+}
+if (-not $allOk) {
+    Write-Host "\nPlease install the missing prerequisites and re-run this script." -ForegroundColor Yellow
+    exit 1
+} else {
+    Write-Success "All prerequisites satisfied."
+}
+
 # --- Main ---
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "║          glitch-CLT — Quickstart v$ScriptVersion              ║" -ForegroundColor Magenta
-Write-Host "║  One-command setup for local Qwen 3.6 + Copilot Chat    ║" -ForegroundColor Magenta
-Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
+
+# --- Dynamic ASCII Header ---
+$boxWidth = 58
+$top = "╔" + ("═" * ($boxWidth - 2)) + "╗"
+$bottom = "╚" + ("═" * ($boxWidth - 2)) + "╝"
+$title = "glitch-CLT — Quickstart v$ScriptVersion"
+$subtitle = "One-command setup for local Qwen 3.6 + Copilot Chat"
+function PadCenter($text, $width) {
+    $pad = [Math]::Max(0, $width - 2 - $text.Length)
+    $left = [Math]::Floor($pad / 2)
+    $right = $pad - $left
+    return "║" + (" " * $left) + $text + (" " * $right) + "║"
+}
+Write-Host $top -ForegroundColor Magenta
+Write-Host (PadCenter $title $boxWidth) -ForegroundColor Magenta
+Write-Host (PadCenter $subtitle $boxWidth) -ForegroundColor Magenta
+Write-Host $bottom -ForegroundColor Magenta
 Write-Host ""
 
 # Resolve clone path
@@ -84,11 +136,6 @@ $modelPath = Join-Path $cloneDir "models"
 if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     Write-Success "Model file already exists: $ModelFile"
 } else {
-    if (-not (Test-CommandExists huggingface-cli)) {
-        Write-Error "`nhuggingface-cli not found. Please install it first:"
-        Write-Error "  pip install huggingface_hub"
-        exit 1
-    }
 
     # Create models directory if needed
     if (-not (Test-Path $modelPath)) { New-Item -ItemType Directory -Path $modelPath | Out-Null }
@@ -98,22 +145,22 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     Write-Host ""
 
     try {
-        huggingface-cli download $ModelRepo $ModelFile --local-dir "$modelPath" 2>&1 | ForEach-Object {
-            # Show progress without overwhelming the output
-            if ($_ -match '(\d+)%') {
-                $progress = [int]$Matches[1]
-                if ($progress % 5 -eq 0) {
-                    Write-Host "  Downloading... $progress%" -ForegroundColor DarkGray
-                }
-            } else {
-                Write-Host "  $_" -ForegroundColor DarkGray
-            }
+        $downloadOutput = hf download $ModelRepo $ModelFile --local-dir $modelPath 2>&1
+        if ($LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $modelPath $ModelFile))) {
+            Write-Success "Model downloaded successfully"
+        } else {
+            Write-Error "`nFailed to download model. Output:"
+            Write-Host $downloadOutput -ForegroundColor Red
+            Write-Error "You can also download manually from:"
+            Write-Error "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/$($ModelFile)?download=true"
+            Write-Error "Then place the file in: $modelPath"
+            exit 1
         }
-        Write-Success "Model downloaded successfully"
     } catch {
         Write-Error "`nFailed to download model. Check your internet connection and try again."
         Write-Error "You can also download manually from:"
         Write-Error "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/$($ModelFile)?download=true"
+        Write-Error "Then place the file in: $modelPath"
         exit 1
     }
 }
@@ -121,7 +168,7 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
 # Configure VS Code
 Write-Step "3/5" "Configuring VS Code Insiders..."
 try {
-    & "$PSScriptRoot\scripts\setup-vscode.ps1" -Port $Port -ContextLength $ContextLength
+    & (Join-Path $cloneDir 'scripts' 'setup-vscode.ps1') -Port $Port -ContextLength $ContextLength
     Write-Success "VS Code configuration complete"
 } catch {
     Write-Warn "VS Code setup encountered an issue: $_"
@@ -131,11 +178,17 @@ try {
 # Start Docker server
 Write-Step "4/5" "Starting Docker container..."
 try {
-    docker compose up -d 2>&1 | Out-Null
+    Write-Host "  Running: docker compose up -d" -ForegroundColor DarkGray
+    $dockerOutput = docker compose up -d 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Docker container started (building on first run)"
+        if ($dockerOutput) {
+            Write-Host $dockerOutput -ForegroundColor Gray
+        }
     } else {
-        # Try without suppressing output to see errors
+        Write-Warn "Docker compose up -d returned a non-zero exit code. Output:"
+        Write-Host $dockerOutput -ForegroundColor Red
+        Write-Host "  Retrying without output suppression..." -ForegroundColor Yellow
         docker compose up -d
     }
 } catch {
