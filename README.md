@@ -85,13 +85,19 @@ There are two ways to get started — **one-command setup** (recommended) or **m
 
 ### One-Command Setup (Recommended)
 
-If you have all prerequisites installed, this single script does everything:
+If you have all prerequisites installed, you can deploy the entire environment with a single copy-paste command:
 
+**One-Liner (PowerShell):**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "iex (Invoke-RestMethod 'https://raw.githubusercontent.com/nethereal/glitch-clt/main/quickstart.ps1')"
+```
+
+Alternatively, if you have already cloned the repository:
 ```powershell
 .\quickstart.ps1
 ```
 
-It will clone the repo, download the ~18GB model, configure VS Code Insiders, start Docker, wait for readiness, and launch VS Code automatically.
+It will clone the repo (if needed), download the ~18GB model, configure VS Code Insiders, start Docker, and launch the environment automatically.
 
 **Options:**
 ```powershell
