@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-<#
+<#!
 .SYNOPSIS
     One-command setup for glitch-CLT — clones, downloads model, configures VS Code, and launches server.
 .DESCRIPTION
