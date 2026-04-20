@@ -113,7 +113,7 @@ if (Test-Path (Join-Path $modelPath "$ModelFile")) {
     } catch {
         Write-Error "`nFailed to download model. Check your internet connection and try again."
         Write-Error "You can also download manually from:"
-        Write-Error "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?show_file_info=$([Uri]::EscapeDataString($ModelFile))"
+        Write-Error "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/$($ModelFile)?download=true"
         exit 1
     }
 }
