@@ -185,19 +185,14 @@ $jsonOutput | Out-File -FilePath $configFile -Encoding UTF8
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
-Write-Host "  Configuration complete!" -ForegroundColor Green
+Write-Host "     VSCode Copilot Provider Configuration complete!" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Model:      $ModelName ($ModelId)" -ForegroundColor White
 Write-Host "URL:        http://${tgtHost}:${Port}/v1" -ForegroundColor White
 Write-Host "Context:    $ContextLength tokens" -ForegroundColor White
 Write-Host "Vendor:     $vendorType" -ForegroundColor White
-Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host ("  1. Start the Docker container: docker compose up -d") -ForegroundColor Gray
-Write-Host ("  2. Restart VS Code Insiders (if already open)") -ForegroundColor Gray
-Write-Host ("  3. Open Copilot Chat and select '" + $EntryName + "' from the model picker") -ForegroundColor Gray
-Write-Host ""
+
 if ($vscodeWasRunning) {
     Write-Warning "VS Code Insiders was detected running during configuration. You may need to restart VS Code Insiders for changes to take effect."
 }
