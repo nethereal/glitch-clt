@@ -178,11 +178,13 @@ The server will build from source on first run (~5–15 min), load the model int
 
 ### Environment Variables
 
-Copy `.env.example` to `.env.local` and customize:
+Copy `.env.example` to `.env` and customize:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
+
+> **Note:** `quickstart.ps1` automatically creates and configures this file for you.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -300,7 +302,7 @@ Benchmarks are run on NVIDIA RTX 3090 (24GB VRAM) with Qwen3.6-35B-A3B:
 ### Adding New Models
 
 1. Download the GGUF file to `models/` directory
-2. Update `.env.local`:
+2. Update `.env`:
    ```bash
    MODEL_FILE=your-model-file.gguf
    ```
